@@ -18,6 +18,7 @@ Memory budget:
 from __future__ import annotations
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 # ---------------------------------------------------------------------------
 # Page configuration — must be the very first Streamlit call
@@ -243,53 +244,21 @@ hr {
 ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-/* === Hide Streamlit chrome — keep header visible for sidebar toggle === */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
+/* === Hide Streamlit chrome === */
+#MainMenu, footer { visibility: hidden; }
 [data-testid="stToolbar"] { display: none !important; }
 [data-testid="stDecoration"] { display: none !important; }
-/* Make the header transparent so it blends in, but don't hide it —
-   the mobile sidebar toggle button lives inside it */
+/* Keep header transparent — custom JS button handles the toggle */
 [data-testid="stHeader"] {
   background: transparent !important;
   border-bottom: none !important;
-}
-/* Hide everything inside the header except the sidebar toggle */
-[data-testid="stHeader"] > *:not([data-testid="stSidebarCollapsedControl"]) {
   visibility: hidden !important;
 }
-
-/* === Sidebar toggle — collapsed state (mobile / narrow viewport) === */
-[data-testid="stSidebarCollapsedControl"] {
-  visibility: visible !important;
-  display: flex !important;
-  align-items: center !important;
-  z-index: 999999 !important;
-}
-
-[data-testid="stSidebarCollapsedControl"] button {
-  background: linear-gradient(135deg, #0c0c1a, #050510) !important;
-  border: var(--border-gold) !important;
-  border-radius: 0 8px 8px 0 !important;
-  color: var(--gold) !important;
-  padding: 8px 12px !important;
-  box-shadow: 3px 0 14px rgba(201,162,39,0.25) !important;
-  cursor: pointer !important;
-}
-
-[data-testid="stSidebarCollapsedControl"] button svg {
-  fill: var(--gold) !important;
-  stroke: var(--gold) !important;
-  width: 20px !important;
-  height: 20px !important;
-}
-
-/* === Sidebar collapse button — inside open sidebar === */
+/* Style Streamlit's native collapse arrow inside the open sidebar */
 [data-testid="stSidebarCollapseButton"] button {
   color: var(--gold) !important;
   background: transparent !important;
 }
-
 [data-testid="stSidebarCollapseButton"] button svg {
   fill: var(--gold) !important;
 }
@@ -317,6 +286,82 @@ footer { visibility: hidden; }
 """
 st.markdown(_CSS, unsafe_allow_html=True)
 
+# ---------------------------------------------------------------------------
+# Floating sidebar toggle — injected into the parent document via JS.
+# Streamlit's native toggle is unreliable across versions on mobile/desktop
+# once the header is hidden, so we inject our own themed button that
+# programmatically clicks whichever native toggle is present.
+# ---------------------------------------------------------------------------
+components.html(
+    """
+    <script>
+    (function () {
+        var doc = window.parent.document;
+
+        // Prevent duplicate buttons on Streamlit re-runs
+        if (doc.getElementById('bathala-toggle')) return;
+
+        var btn = doc.createElement('button');
+        btn.id = 'bathala-toggle';
+        btn.title = 'Show / hide creatures panel';
+        btn.innerHTML = '&#9776;';  // ☰
+
+        btn.style.cssText = [
+            'position:fixed',
+            'top:14px',
+            'left:14px',
+            'z-index:2147483647',
+            'background:linear-gradient(135deg,#0c0c1a,#050510)',
+            'border:1px solid rgba(201,162,39,0.55)',
+            'color:#c9a227',
+            'padding:7px 13px',
+            'border-radius:8px',
+            'cursor:pointer',
+            'font-size:1.15rem',
+            'line-height:1',
+            'box-shadow:0 0 16px rgba(201,162,39,0.22)',
+            'font-family:serif',
+            'transition:all 0.2s ease',
+        ].join(';');
+
+        btn.onmouseover = function () {
+            btn.style.background = 'rgba(201,162,39,0.14)';
+            btn.style.boxShadow = '0 0 22px rgba(201,162,39,0.45)';
+        };
+        btn.onmouseout = function () {
+            btn.style.background = 'linear-gradient(135deg,#0c0c1a,#050510)';
+            btn.style.boxShadow = '0 0 16px rgba(201,162,39,0.22)';
+        };
+
+        btn.onclick = function () {
+            // Try every selector Streamlit has used across versions
+            var selectors = [
+                '[data-testid="stSidebarCollapsedControl"] button',
+                '[data-testid="stSidebarCollapseButton"] button',
+                '[data-testid="stSidebar"] button[kind="header"]',
+                'button[aria-label="open sidebar"]',
+                'button[aria-label="close sidebar"]',
+                'section[data-testid="stSidebar"] ~ div button',
+            ];
+            for (var i = 0; i < selectors.length; i++) {
+                var native = doc.querySelector(selectors[i]);
+                if (native) { native.click(); return; }
+            }
+            // Last resort: toggle sidebar display directly
+            var sidebar = doc.querySelector('[data-testid="stSidebar"]');
+            if (sidebar) {
+                sidebar.style.display =
+                    (sidebar.style.display === 'none' ? 'block' : 'none');
+            }
+        };
+
+        doc.body.appendChild(btn);
+    })();
+    </script>
+    """,
+    height=0,
+    scrolling=False,
+)
 
 # ---------------------------------------------------------------------------
 # Creature registry — curated for the sidebar
