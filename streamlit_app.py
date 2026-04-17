@@ -243,37 +243,48 @@ hr {
 ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-/* === Hide default Streamlit chrome === */
-#MainMenu, footer, header { visibility: hidden; }
+/* === Hide Streamlit chrome — keep header visible for sidebar toggle === */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
 [data-testid="stToolbar"] { display: none !important; }
 [data-testid="stDecoration"] { display: none !important; }
+/* Make the header transparent so it blends in, but don't hide it —
+   the mobile sidebar toggle button lives inside it */
+[data-testid="stHeader"] {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+/* Hide everything inside the header except the sidebar toggle */
+[data-testid="stHeader"] > *:not([data-testid="stSidebarCollapsedControl"]) {
+  visibility: hidden !important;
+}
 
-/* === Mobile sidebar toggle button === */
+/* === Sidebar toggle — collapsed state (mobile / narrow viewport) === */
 [data-testid="stSidebarCollapsedControl"] {
-  position: fixed !important;
-  top: 12px !important;
-  left: 0 !important;
+  visibility: visible !important;
+  display: flex !important;
+  align-items: center !important;
   z-index: 999999 !important;
-  background: linear-gradient(135deg, #0c0c1a, #050510) !important;
-  border: var(--border-gold) !important;
-  border-left: none !important;
-  border-radius: 0 8px 8px 0 !important;
-  padding: 4px !important;
-  box-shadow: 3px 0 14px rgba(201,162,39,0.25) !important;
 }
 
 [data-testid="stSidebarCollapsedControl"] button {
+  background: linear-gradient(135deg, #0c0c1a, #050510) !important;
+  border: var(--border-gold) !important;
+  border-radius: 0 8px 8px 0 !important;
   color: var(--gold) !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 6px 10px !important;
+  padding: 8px 12px !important;
+  box-shadow: 3px 0 14px rgba(201,162,39,0.25) !important;
+  cursor: pointer !important;
 }
 
 [data-testid="stSidebarCollapsedControl"] button svg {
   fill: var(--gold) !important;
   stroke: var(--gold) !important;
+  width: 20px !important;
+  height: 20px !important;
 }
 
+/* === Sidebar collapse button — inside open sidebar === */
 [data-testid="stSidebarCollapseButton"] button {
   color: var(--gold) !important;
   background: transparent !important;
