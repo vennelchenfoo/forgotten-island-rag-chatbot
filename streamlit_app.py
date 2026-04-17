@@ -247,6 +247,61 @@ hr {
 #MainMenu, footer, header { visibility: hidden; }
 [data-testid="stToolbar"] { display: none !important; }
 [data-testid="stDecoration"] { display: none !important; }
+
+/* === Mobile sidebar toggle button === */
+[data-testid="stSidebarCollapsedControl"] {
+  position: fixed !important;
+  top: 12px !important;
+  left: 0 !important;
+  z-index: 999999 !important;
+  background: linear-gradient(135deg, #0c0c1a, #050510) !important;
+  border: var(--border-gold) !important;
+  border-left: none !important;
+  border-radius: 0 8px 8px 0 !important;
+  padding: 4px !important;
+  box-shadow: 3px 0 14px rgba(201,162,39,0.25) !important;
+}
+
+[data-testid="stSidebarCollapsedControl"] button {
+  color: var(--gold) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 6px 10px !important;
+}
+
+[data-testid="stSidebarCollapsedControl"] button svg {
+  fill: var(--gold) !important;
+  stroke: var(--gold) !important;
+}
+
+[data-testid="stSidebarCollapseButton"] button {
+  color: var(--gold) !important;
+  background: transparent !important;
+}
+
+[data-testid="stSidebarCollapseButton"] button svg {
+  fill: var(--gold) !important;
+}
+
+/* === Mobile responsiveness === */
+@media (max-width: 768px) {
+  [data-testid="stMainBlockContainer"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .main-header-title {
+    font-size: 1.7rem !important;
+  }
+
+  [data-testid="stChatMessage"] {
+    padding: 10px 12px !important;
+  }
+
+  [data-testid="stChatInput"] textarea {
+    font-size: 0.85rem !important;
+  }
+}
 </style>
 """
 st.markdown(_CSS, unsafe_allow_html=True)
@@ -409,8 +464,7 @@ _GREETING = (
     "on moonless nights.\n\n"
     "Ask me of the creatures that stalk the night, the spirits of forest and sea, "
     "the heroes and gods of the blessed archipelago — or perhaps the mystical "
-    "world of **Nakali**, the Forgotten Island that *DreamWorks Animation* will "
-    "bring to life in 2026.\n\n"
+    "world of **Nakali**, the Forgotten Island of ancient Philippine lore.\n\n"
     "*Browse the creatures in the side panel, or simply ask. The ancient grove awaits...*"
 )
 
@@ -552,7 +606,7 @@ with st.sidebar:
             </div>
             <div style="font-family:'Raleway',sans-serif; font-size:0.68rem; color:#9a8060;
                         margin-top:6px; font-style:italic; letter-spacing:0.03em;">
-                Oracle of Philippine Mythology
+                Guardian of Philippine Mythological Lore
             </div>
         </div>
         <div style="border-bottom:1px solid rgba(201,162,39,0.22);
@@ -684,7 +738,8 @@ with st.sidebar:
 st.markdown(
     """
     <div style="text-align:center; padding:36px 0 4px;">
-        <div style="font-family:'Cinzel',serif; font-size:2.4rem; color:#c9a227;
+        <div class="main-header-title"
+             style="font-family:'Cinzel',serif; font-size:2.4rem; color:#c9a227;
                     text-shadow:0 0 35px rgba(201,162,39,0.4),
                                 0 0 70px rgba(201,162,39,0.12);
                     letter-spacing:0.08em; line-height:1.2;">
@@ -697,17 +752,12 @@ st.markdown(
         </div>
         <div style="font-family:'Raleway',sans-serif; font-size:0.82rem; color:#9a8060;
                     font-style:italic; margin-top:8px; letter-spacing:0.05em;">
-            Guardian of Philippine Mythological Lore &nbsp;·&nbsp; Oracle of Nakali
+            Guardian of Philippine Mythological Lore
         </div>
     </div>
     <div style="border-bottom:1px solid rgba(201,162,39,0.2);
-                margin:18px auto 0; max-width:560px;"></div>
-    <div style="text-align:center; margin:6px 0 20px;">
-        <span style="font-family:'Raleway',sans-serif; font-size:0.65rem;
-                     color:#4a3820; letter-spacing:0.12em;">
-            ✦ &nbsp; A DREAMWORKS ANIMATION WORLD &nbsp; ✦
-        </span>
-    </div>
+                margin:18px auto 0 auto; max-width:560px;"></div>
+    <div style="margin-bottom:20px;"></div>
     """,
     unsafe_allow_html=True,
 )
