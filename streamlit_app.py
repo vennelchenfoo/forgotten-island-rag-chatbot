@@ -18,16 +18,21 @@ Memory budget:
 from __future__ import annotations
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ---------------------------------------------------------------------------
 # Page configuration — must be the very first Streamlit call
 # ---------------------------------------------------------------------------
+# Sidebar state persists across reruns — flipping it in session state and
+# calling st.rerun() toggles the sidebar open/closed. This is the community-
+# recommended approach (Streamlit has no programmatic toggle API).
+if "sidebar_state" not in st.session_state:
+    st.session_state.sidebar_state = "expanded"
+
 st.set_page_config(
     page_title="Forgotten Island — Bathala-Alam",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state=st.session_state.sidebar_state,
     menu_items={
         "About": (
             "**Forgotten Island — Bathala-Alam**\n\n"
@@ -244,17 +249,42 @@ hr {
 ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-/* === Hide Streamlit chrome === */
+/* === Hide Streamlit chrome (but keep header interactive for sidebar toggle) === */
 #MainMenu, footer { visibility: hidden; }
 [data-testid="stToolbar"] { display: none !important; }
 [data-testid="stDecoration"] { display: none !important; }
-/* Keep header transparent — custom JS button handles the toggle */
+
+/* Transparent header — keeps native sidebar expand-arrow clickable */
 [data-testid="stHeader"] {
   background: transparent !important;
   border-bottom: none !important;
-  visibility: hidden !important;
 }
-/* Style Streamlit's native collapse arrow inside the open sidebar */
+
+/* Native expand-arrow (shown when sidebar is collapsed) — themed + prominent */
+[data-testid="stSidebarCollapsedControl"] {
+  visibility: visible !important;
+  display: flex !important;
+  opacity: 1 !important;
+  z-index: 999999 !important;
+}
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stBaseButton-headerNoPadding"] {
+  background: linear-gradient(135deg, #0c0c1a, #050510) !important;
+  border: 1px solid rgba(201,162,39,0.55) !important;
+  border-radius: 0 8px 8px 0 !important;
+  color: var(--gold) !important;
+  padding: 8px 12px !important;
+  box-shadow: 3px 0 14px rgba(201,162,39,0.25) !important;
+}
+[data-testid="stSidebarCollapsedControl"] button svg,
+[data-testid="stBaseButton-headerNoPadding"] svg {
+  fill: var(--gold) !important;
+  stroke: var(--gold) !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Native collapse-arrow (shown inside open sidebar) — themed */
 [data-testid="stSidebarCollapseButton"] button {
   color: var(--gold) !important;
   background: transparent !important;
@@ -287,80 +317,64 @@ hr {
 st.markdown(_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Floating sidebar toggle — injected into the parent document via JS.
-# Streamlit's native toggle is unreliable across versions on mobile/desktop
-# once the header is hidden, so we inject our own themed button that
-# programmatically clicks whichever native toggle is present.
+# Themed sidebar toggle — a Streamlit button that flips session state +
+# st.rerun(), combined with CSS that pins it fixed at top-left. Works on
+# all viewports because it drives Streamlit's own initial_sidebar_state.
 # ---------------------------------------------------------------------------
-components.html(
+_toggle_label = "✕" if st.session_state.sidebar_state == "expanded" else "☰"
+_toggle_container = st.container()
+with _toggle_container:
+    st.markdown('<div id="bathala-toggle-wrap"></div>', unsafe_allow_html=True)
+    if st.button(_toggle_label, key="sidebar_toggle_btn",
+                 help="Show / hide the creatures panel"):
+        st.session_state.sidebar_state = (
+            "collapsed" if st.session_state.sidebar_state == "expanded" else "expanded"
+        )
+        st.rerun()
+
+# Fixed positioning + theming for the toggle button (targets by key)
+st.markdown(
     """
-    <script>
-    (function () {
-        var doc = window.parent.document;
-
-        // Prevent duplicate buttons on Streamlit re-runs
-        if (doc.getElementById('bathala-toggle')) return;
-
-        var btn = doc.createElement('button');
-        btn.id = 'bathala-toggle';
-        btn.title = 'Show / hide creatures panel';
-        btn.innerHTML = '&#9776;';  // ☰
-
-        btn.style.cssText = [
-            'position:fixed',
-            'top:14px',
-            'left:14px',
-            'z-index:2147483647',
-            'background:linear-gradient(135deg,#0c0c1a,#050510)',
-            'border:1px solid rgba(201,162,39,0.55)',
-            'color:#c9a227',
-            'padding:7px 13px',
-            'border-radius:8px',
-            'cursor:pointer',
-            'font-size:1.15rem',
-            'line-height:1',
-            'box-shadow:0 0 16px rgba(201,162,39,0.22)',
-            'font-family:serif',
-            'transition:all 0.2s ease',
-        ].join(';');
-
-        btn.onmouseover = function () {
-            btn.style.background = 'rgba(201,162,39,0.14)';
-            btn.style.boxShadow = '0 0 22px rgba(201,162,39,0.45)';
-        };
-        btn.onmouseout = function () {
-            btn.style.background = 'linear-gradient(135deg,#0c0c1a,#050510)';
-            btn.style.boxShadow = '0 0 16px rgba(201,162,39,0.22)';
-        };
-
-        btn.onclick = function () {
-            // Try every selector Streamlit has used across versions
-            var selectors = [
-                '[data-testid="stSidebarCollapsedControl"] button',
-                '[data-testid="stSidebarCollapseButton"] button',
-                '[data-testid="stSidebar"] button[kind="header"]',
-                'button[aria-label="open sidebar"]',
-                'button[aria-label="close sidebar"]',
-                'section[data-testid="stSidebar"] ~ div button',
-            ];
-            for (var i = 0; i < selectors.length; i++) {
-                var native = doc.querySelector(selectors[i]);
-                if (native) { native.click(); return; }
-            }
-            // Last resort: toggle sidebar display directly
-            var sidebar = doc.querySelector('[data-testid="stSidebar"]');
-            if (sidebar) {
-                sidebar.style.display =
-                    (sidebar.style.display === 'none' ? 'block' : 'none');
-            }
-        };
-
-        doc.body.appendChild(btn);
-    })();
-    </script>
+    <style>
+    /* Pin the toggle button's container to the top-left of the viewport */
+    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) {
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 999999 !important;
+        width: auto !important;
+        gap: 0 !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) > div {
+        width: auto !important;
+    }
+    /* Theme the toggle button itself */
+    .stButton > button[data-testid="stBaseButton-secondary"][aria-label*="Show"],
+    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) button {
+        background: linear-gradient(135deg, #0c0c1a, #050510) !important;
+        border: 1px solid rgba(201,162,39,0.55) !important;
+        color: #c9a227 !important;
+        font-family: serif !important;
+        font-size: 1.05rem !important;
+        padding: 4px 12px !important;
+        min-height: 0 !important;
+        height: 34px !important;
+        width: 42px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 0 14px rgba(201,162,39,0.22) !important;
+        margin: 0 !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) button:hover {
+        background: rgba(201,162,39,0.15) !important;
+        box-shadow: 0 0 20px rgba(201,162,39,0.45) !important;
+        border-color: #c9a227 !important;
+        color: #c9a227 !important;
+    }
+    /* Nudge main content down so the toggle never overlaps the header */
+    [data-testid="stMainBlockContainer"] { padding-top: 56px !important; }
+    </style>
     """,
-    height=0,
-    scrolling=False,
+    unsafe_allow_html=True,
 )
 
 # ---------------------------------------------------------------------------
