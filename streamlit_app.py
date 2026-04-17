@@ -317,60 +317,91 @@ hr {
 st.markdown(_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Themed sidebar toggle — a Streamlit button that flips session state +
-# st.rerun(), combined with CSS that pins it fixed at top-left. Works on
-# all viewports because it drives Streamlit's own initial_sidebar_state.
+# Themed sidebar toggle — our session_state is the source of truth.
+# CSS forces sidebar visibility in BOTH directions (open / closed) because
+# `initial_sidebar_state` only applies on first render, and Streamlit's own
+# sidebar state can drift out of sync with ours on rerun.
 # ---------------------------------------------------------------------------
-_toggle_label = "✕" if st.session_state.sidebar_state == "expanded" else "☰"
-_toggle_container = st.container()
-with _toggle_container:
-    st.markdown('<div id="bathala-toggle-wrap"></div>', unsafe_allow_html=True)
-    if st.button(_toggle_label, key="sidebar_toggle_btn",
-                 help="Show / hide the creatures panel"):
-        st.session_state.sidebar_state = (
-            "collapsed" if st.session_state.sidebar_state == "expanded" else "expanded"
-        )
-        st.rerun()
+_sidebar_open = st.session_state.sidebar_state == "expanded"
+_toggle_label = "✕" if _sidebar_open else "☰"
 
-# Fixed positioning + theming for the toggle button (targets by key)
+if st.button(_toggle_label, key="bathala_sidebar_toggle",
+             help="Show / hide the creatures panel"):
+    st.session_state.sidebar_state = "collapsed" if _sidebar_open else "expanded"
+    st.rerun()
+
+# Force sidebar visibility via CSS based on OUR session_state — this is the
+# only reliable toggle mechanism across reruns.
+if _sidebar_open:
+    _sidebar_force_css = """
+    <style>
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"] {
+        display: flex !important;
+        width: 21rem !important;
+        min-width: 21rem !important;
+        max-width: 21rem !important;
+        transform: translateX(0) !important;
+        visibility: visible !important;
+        margin-left: 0 !important;
+    }
+    [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+    </style>
+    """
+else:
+    _sidebar_force_css = """
+    <style>
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        transform: translateX(-100%) !important;
+        visibility: hidden !important;
+    }
+    [data-testid="stAppViewContainer"] > section:first-child { display: none !important; }
+    [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+    </style>
+    """
+st.markdown(_sidebar_force_css, unsafe_allow_html=True)
+
+# Fixed positioning + theming for the toggle button.
+# Uses Streamlit's st-key-* class (emitted by key="bathala_sidebar_toggle"
+# in Streamlit >=1.37) — this is the documented, reliable CSS hook.
 st.markdown(
     """
     <style>
-    /* Pin the toggle button's container to the top-left of the viewport */
-    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) {
+    .st-key-bathala_sidebar_toggle {
         position: fixed !important;
         top: 10px !important;
         left: 10px !important;
         z-index: 999999 !important;
         width: auto !important;
-        gap: 0 !important;
     }
-    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) > div {
-        width: auto !important;
-    }
-    /* Theme the toggle button itself */
-    .stButton > button[data-testid="stBaseButton-secondary"][aria-label*="Show"],
-    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) button {
+    .st-key-bathala_sidebar_toggle > div { width: auto !important; }
+    .st-key-bathala_sidebar_toggle button {
         background: linear-gradient(135deg, #0c0c1a, #050510) !important;
         border: 1px solid rgba(201,162,39,0.55) !important;
         color: #c9a227 !important;
         font-family: serif !important;
-        font-size: 1.05rem !important;
-        padding: 4px 12px !important;
+        font-size: 1.1rem !important;
+        padding: 4px 10px !important;
         min-height: 0 !important;
-        height: 34px !important;
-        width: 42px !important;
+        height: 36px !important;
+        width: 44px !important;
         border-radius: 8px !important;
-        box-shadow: 0 0 14px rgba(201,162,39,0.22) !important;
+        box-shadow: 0 0 14px rgba(201,162,39,0.25) !important;
         margin: 0 !important;
+        line-height: 1 !important;
     }
-    div[data-testid="stVerticalBlock"]:has(> div > #bathala-toggle-wrap) button:hover {
+    .st-key-bathala_sidebar_toggle button:hover {
         background: rgba(201,162,39,0.15) !important;
         box-shadow: 0 0 20px rgba(201,162,39,0.45) !important;
         border-color: #c9a227 !important;
         color: #c9a227 !important;
     }
-    /* Nudge main content down so the toggle never overlaps the header */
+    /* Nudge main content down so the toggle never overlaps it */
     [data-testid="stMainBlockContainer"] { padding-top: 56px !important; }
     </style>
     """,
