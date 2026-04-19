@@ -560,7 +560,7 @@ _CREATURES: dict[str, list[dict]] = {
 # Opening message from Bathala-Alam
 # ---------------------------------------------------------------------------
 _GREETING = (
-    "Magandang araw, seeker. I am **Bathala-Alam** — keeper of forgotten names, "
+    "Magandang araw, seeker. I am **Bathala-Alam**, keeper of forgotten names, "
     "a spirit woven from whispered stories and the rustling of narra leaves "
     "on moonless nights.\n\n"
     "Ask me of the creatures that stalk the night, the spirits of forest and sea, "
@@ -971,3 +971,40 @@ if not st.session_state.engine_error:
         "Ask about creatures, diwata, the world of Nakali, or the Forgotten Island...",
     ):
         _handle_question(prompt)
+
+# ---------------------------------------------------------------------------
+# Footer — creator credit & AI disclaimer
+# Pinned below the chat input at the very bottom of the viewport.
+# ---------------------------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    /* Make room below the chat input for the fixed footer */
+    [data-testid="stBottom"] > div { padding-bottom: 34px !important; }
+    </style>
+    <div style="position:fixed; bottom:0; left:0; right:0;
+                padding:4px 12px 6px; text-align:center;
+                z-index:100; pointer-events:none;
+                background:linear-gradient(to top,
+                    rgba(7,7,16,0.95) 60%, rgba(7,7,16,0));">
+        <div style="font-family:'Cinzel',serif; font-size:0.5rem; color:#c9a227;
+                    letter-spacing:0.14em; opacity:0.8;">
+            ✦ CRAFTED BY
+            <a href="https://www.linkedin.com/in/vennelchenfoo"
+               target="_blank" rel="noopener"
+               style="color:#c9a227; text-decoration:none;
+                      border-bottom:1px dotted rgba(201,162,39,0.4);
+                      padding-bottom:1px; pointer-events:auto;">
+                VENNEL CHENFOO
+            </a>
+            &nbsp;·&nbsp; BUILT WITH CLAUDE CODE ✦
+        </div>
+        <div style="font-family:'Raleway',sans-serif; font-size:0.6rem;
+                    color:#6a5040; font-style:italic; margin-top:2px;
+                    letter-spacing:0.03em; opacity:0.9;">
+            Bathala-Alam is an AI oracle, it might make mistakes. Demonstration only.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
