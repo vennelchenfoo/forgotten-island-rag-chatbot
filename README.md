@@ -2,7 +2,9 @@
 
 *"Hindi ka nag-iisa. The old stories are still here. You just have to know how to ask."*
 
-![Bathala-Alam main view](images/main.png)
+<p align="center">
+    <img src="images/main.png" alt="Main creature browser" width="420" />
+</p>
 
 **Bathala-Alam** is an AI oracle trained on Philippine mythology. It speaks like your lolo or lola: grounded in knowledge, reverent of the old ways, and always ready with a story.
 
@@ -47,7 +49,9 @@ The knowledge base here covers **40+ Philippine creatures** across 8 mythologica
 | Undead | Multo, Bangungot |
 | Mythical Animals | Sarimanok, Adarna |
 
-![Sidebar creature browser](images/side.png)
+<p align="center">
+    <img src="images/side.png" alt="Sidebar creature browser" width="280" />
+</p>
 
 ---
 
@@ -115,7 +119,9 @@ Across **8 hand-crafted Q&A pairs** and four stages (baseline, chunking, reranki
 - The hardest question, linking mythology to *Forgotten Island*, scored **0.52**, since it requires cross-referencing lore with film narrative
 - Every optimization was justified by numbers, not intuition
 
-![Full app view](images/full.png)
+<p align="center">
+    <img src="images/full.png" alt="Full page" width="480" />
+</p>
 
 ---
 
@@ -196,5 +202,5 @@ This is that place.
 
 *Built with curiosity, caffeine, and a deep respect for the old stories.*
 
-*Vennel Chenfoo | Data Science & AI Bootcamp @ WBS Coding School*
+*Vennel Chenfoo | Data Science & AI Bootcamp @ WBS Coding School*<br>
 *Filipino. Building with data.*
